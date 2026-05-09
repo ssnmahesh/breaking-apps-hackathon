@@ -183,16 +183,16 @@ test("filter: clearing the filter restores all 3 entries", async ({ page }) => {
   await runSteps({
     page,
     userFlow: "Apply a tag filter then clear it to restore the full feed",
-    steps: [
-      {
-        description: "Click the React tag badge on any entry to apply the filter",
-        waitUntil: "Filtering by"
-      },
-      {
-        description: "Click the X button or clear button next to the active filter indicator",
-        waitUntil: "Fixed API rate limiting bug"
-      },
-    ],
+  steps: [
+  {
+    description: "Click the React tag badge on any entry to apply the filter",
+    waitUntil: "React"
+  },
+  {
+    description: "Click the X button or clear button next to the active filter to clear it",
+    waitUntil: "Fixed API rate limiting bug"
+  },
+  ],
     assertions: [
       { assertion: "The filter indicator is no longer visible — the active filter has been cleared" },
       { assertion: "All 3 entries are visible: Added dark mode toggle, Fixed API rate limiting bug, and Built login page with JWT auth" },
@@ -219,25 +219,18 @@ test("edit: clicking Edit loads entry into form and saves changes", async ({ pag
     steps: [
       {
         description: "Click the blue Edit button on the entry titled 'Added dark mode toggle'",
-        waitUntil: "Added dark mode toggle"
-      },
-      {
-        description: "Clear the Description field and type new text",
-        data: { value: "Implemented CSS custom properties for theming and saved preference to localStorage" }
-      },
-      {
-        description: "Click the Save Entry button"
+        waitUntil: "Update Entry"
       },
     ],
     assertions: [
-      { assertion: "The entry 'Added dark mode toggle' now shows the updated description about CSS custom properties" },
-      { assertion: "There is only one entry titled 'Added dark mode toggle' — it was not duplicated" },
-      { assertion: "The total entry count in the stats panel has not changed from 3" },
       {
-        // ← THIS ASSERTION WILL FAIL — intentional bug exposure
-        // The form heading stays "Add New Entry" during edit mode
-        // Claude forgot to update the heading when switching to edit mode
-        assertion: "While editing is active the form section heading reads 'Edit Entry' not 'Add New Entry'"
+        assertion: "The form heading reads 'Edit Entry' indicating edit mode is active"
+      },
+      {
+        assertion: "The save button reads 'Update Entry' not 'Save Entry'"
+      },
+      {
+        assertion: "The Title field is pre-filled with 'Added dark mode toggle'"
       },
     ],
     test,
@@ -245,6 +238,34 @@ test("edit: clicking Edit loads entry into form and saves changes", async ({ pag
   });
 });
 
+test("edit: saving changes updates entry without duplication", async ({ page }) => {
+  test.setTimeout(150_000);
+
+  await runSteps({
+    page,
+    userFlow: "Edit an entry and save the changes",
+    steps: [
+      {
+        description: "Click the blue Edit button on the entry titled 'Added dark mode toggle'",
+        waitUntil: "Update Entry"
+      },
+      {
+        description: "Clear the Description field and type a new description",
+        data: { value: "Implemented CSS custom properties for theming and saved preference to localStorage" }
+      },
+      {
+        description: "Click the Update Entry button to save"
+      },
+    ],
+    assertions: [
+      { assertion: "The entry 'Added dark mode toggle' shows the updated description" },
+      { assertion: "There is only one entry titled 'Added dark mode toggle' — no duplication" },
+      { assertion: "The Total Entries count remains 3" },
+    ],
+    test,
+    expect,
+  });
+});
 
 // ─────────────────────────────────────────────────────────────────
 // TEST 7 — Delete: cancel keeps the entry
@@ -258,11 +279,10 @@ test("delete: cancelling the confirmation keeps entry intact", async ({ page }) 
     steps: [
       {
         description: "Click the red Delete button on the entry titled 'Fixed API rate limiting bug'",
-        waitUntil: "Are you sure"
+        waitUntil: "Delete"
       },
       {
-        description: "Click the Cancel button in the confirmation dialog",
-        waitUntil: "Fixed API rate limiting bug"
+        description: "Click the Cancel button in the confirmation dialog"
       },
     ],
     assertions: [
@@ -337,6 +357,62 @@ test("form: Clear Form button allows a new entry to be saved afterwards", async 
       { assertion: "The entry 'Entry saved after form was cleared' is visible in the Recent Entries feed" },
       { assertion: "There is no entry titled 'This entry will be cleared' in the feed" },
       { assertion: "The form fields are empty and ready for another entry" },
+    ],
+    test,
+    expect,
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// TEST 10 — Streak bug exposure
+// Seeds entries with a GAP (May 6 and May 9, skipping May 7 & 8).
+// A broken streak should show 0. Claude's code returns 1 instead.
+// This is the off-by-one bug in the streak calculation logic.
+// EXPECTED: This assertion WILL FAIL — intentional bug exposure.
+// ─────────────────────────────────────────────────────────────────
+test("streak: broken streak shows 0 not 1 (streak logic bug)", async ({ page }) => {
+  test.setTimeout(120_000);
+
+  // Override the beforeEach seed with broken-streak data
+  // Entries on May 6 and May 9 — a 2-day gap means streak is broken
+  await page.evaluate(() => {
+    const brokenStreakEntries = [
+      {
+        id: "2000000000001",
+        title: "Entry from four days ago",
+        description: "This entry is from May 6 — four days before May 9",
+        date: "2026-05-06",
+        tags: ["React"]
+      },
+      {
+        id: "2000000000002",
+        title: "Entry from today",
+        description: "This entry is from May 9 — there is a gap of 3 days",
+        date: "2026-05-09",
+        tags: ["Node.js"]
+      }
+    ];
+    localStorage.setItem("devlog_entries", JSON.stringify(brokenStreakEntries));
+  });
+
+  // Reload so the app reads the broken-streak data
+  await page.reload();
+  await page.waitForTimeout(1500);
+
+  await runSteps({
+    page,
+    userFlow: "Check that a broken day streak correctly shows 0 in the stats panel",
+    steps: [
+      { description: "Look at the Day Streak stat box at the top of the page" },
+    ],
+    assertions: [
+      {
+        // THIS ASSERTION WILL FAIL — intentional bug exposure
+        // The entries span May 6 and May 9 with a 3-day gap.
+        // A broken streak should display 0.
+        // Claude's streak logic returns 1 instead of 0 for broken streaks.
+        assertion: "The Day Streak stat box shows 0 — the entries on May 6 and May 9 have a gap so the streak is broken and should not count"
+      },
     ],
     test,
     expect,

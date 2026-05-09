@@ -402,7 +402,7 @@
         <div class="main-content">
             <!-- Form Section -->
             <div class="card form-section">
-                <h2>Add New Entry</h2>
+                <h2 id="formHeading">Add New Entry</h2>
                 <form id="entryForm">
                     <div class="form-group">
                         <label for="title">Title *</label>
@@ -427,7 +427,7 @@
                     </div>
 
                     <div class="form-buttons">
-                        <button type="submit" class="btn-primary">Save Entry</button>
+                        <button type="submit" class="btn-primary" id="submitBtn">Save Entry</button>
                         <button type="reset" class="btn-secondary" id="resetBtn">Clear Form</button>
                     </div>
                 </form>
@@ -502,6 +502,7 @@
             loadEntries();
             setDateField();
             setupEventListeners();
+            updateFormTitle();
             renderFeed();
             updateStats();
         }
@@ -596,12 +597,26 @@
             updateStats();
         }
 
+        // Update form title and button text based on edit mode
+        function updateFormTitle() {
+            const heading = document.getElementById('formHeading');
+            const submitBtn = document.getElementById('submitBtn');
+            if (editingId !== null) {
+                heading.textContent = 'Edit Entry';
+                submitBtn.textContent = 'Update Entry';
+            } else {
+                heading.textContent = 'Add New Entry';
+                submitBtn.textContent = 'Save Entry';
+            }
+        }
+
         // Clear form
         function clearForm() {
             document.getElementById('entryForm').reset();
             setDateField();
             document.getElementById('titleError').classList.remove('show');
             editingId = null;
+            updateFormTitle();
         }
 
         // Edit entry
@@ -614,6 +629,7 @@
             document.getElementById('description').value = entry.description;
             document.getElementById('date').value = entry.date;
             document.getElementById('tags').value = entry.tags.join(', ');
+            updateFormTitle();
 
             // Scroll to form
             document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
