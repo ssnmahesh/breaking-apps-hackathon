@@ -1,0 +1,30 @@
+{
+  "name": "breaking-apps-hackathon",
+  "version": "1.0.0",
+  "description": "AI regression testing of a vibe-coded DevLog app using Passmark",
+  "main": "index.js",
+  "scripts": {
+    "serve": "http-server . -p 3000 --cors -c-1 --silent",
+    "test": "playwright test --project chromium",
+    "test:headed": "playwright test --project chromium --headed",
+    "test:devlog": "playwright test tests/devlog.spec.ts --project chromium",
+    "test:devlog:headed": "playwright test tests/devlog.spec.ts --project chromium --headed",
+    "report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "@openrouter/ai-sdk-provider": "^2.9.0",
+    "ai": "^6.0.177",
+    "dotenv": "^17.4.2",
+    "passmark": "^1.0.13",
+    "tsx": "^4.21.0"
+  }
+}

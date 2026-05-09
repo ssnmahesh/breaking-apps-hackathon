@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevLog — Developer Activity Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Form Styling */
+        .form-section h2 {
+            font-size: 1.3em;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.9em;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.9em;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.9em;
+        }
+
+        .btn-edit:hover {
+            background: #2980b9;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-section p {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .filter-tag {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-tag button {
+            background: transparent;
+            color: white;
+            padding: 0;
+            margin-left: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        /* Feed Section */
+        .feed-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+        }
+
+        .entry {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .entry:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .entry-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+            flex: 1;
+        }
+
+        .entry-date {
+            color: #999;
+            font-size: 0.9em;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+
+        .entry-description {
+            color: #555;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .entry-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tag-badge {
+            background: #e8eaf6;
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            cursor: pointer;
+            border: 1px solid #667eea;
+            transition: all 0.2s;
+        }
+
+        .tag-badge:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .confirmation-text {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 2em;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .entry-header {
+                flex-direction: column;
+            }
+
+            .entry-date {
+                margin-left: 0;
+                margin-top: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 DevLog</h1>
+            <p>Track your developer activity</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Form Section -->
+            <div class="card form-section">
+                <h2>Add New Entry</h2>
+                <form id="entryForm">
+                    <div class="form-group">
+                        <label for="title">Title *</label>
+                        <input type="text" id="title" placeholder="e.g., Fixed authentication bug" required>
+                        <div class="error-message" id="titleError">Title cannot be empty</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" placeholder="Add more details about what you did..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date">
+                        </div>
+                        <div class="form-group">
+                            <label for="tags">Tags</label>
+                            <input type="text" id="tags" placeholder="e.g., React, Node.js, CSS">
+                        </div>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="btn-primary">Save Entry</button>
+                        <button type="reset" class="btn-secondary" id="resetBtn">Clear Form</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Stats Panel -->
+            <div class="card">
+                <div class="stats-panel">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalEntries">0</div>
+                        <div class="stat-label">Total Entries</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="dayStreak">0</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="mostUsedTag">—</div>
+                        <div class="stat-label">Most Used Tag</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="card" id="filterCard" style="display: none;">
+                <div class="filter-section">
+                    <p>Filtering by:</p>
+                    <div class="filter-tag">
+                        <span id="filterTagName"></span>
+                        <button type="button" aria-label="Clear filter">✕</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feed Section -->
+            <div class="card feed-section">
+                <h2 style="margin-bottom: 16px;">Recent Entries</h2>
+                <div id="feedContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No entries yet. Add your first log above.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h2>Delete Entry?</h2>
+            <div class="confirmation-text">
+                Are you sure you want to delete this entry? This action cannot be undone.
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn-secondary" id="confirmCancel">Cancel</button>
+                <button type="button" class="btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Management
+        const STORAGE_KEY = 'devlog_entries';
+        let entries = [];
+        let currentFilter = null;
+        let editingId = null;
+        let deleteConfirmationId = null;
+
+        // Initialize
+        function init() {
+            loadEntries();
+            setDateField();
+            setupEventListeners();
+            renderFeed();
+            updateStats();
+        }
+
+        // Load entries from localStorage
+        function loadEntries() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            entries = stored ? JSON.parse(stored) : [];
+        }
+
+        // Save entries to localStorage
+        function saveEntries() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+        }
+
+        // Set date field to today
+        function setDateField() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+
+
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('entryForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('resetBtn').addEventListener('click', clearForm);
+            document.getElementById('confirmCancel').addEventListener('click', () => {
+                document.getElementById('confirmModal').classList.remove('active');
+            });
+            document.getElementById('confirmDelete').addEventListener('click', confirmDelete);
+        }
+
+        // Format tags from comma-separated string to array
+        function parseTags(tagsString) {
+            return tagsString
+                .split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0);
+        }
+
+        // Handle form submission
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const titleInput = document.getElementById('title');
+            const titleError = document.getElementById('titleError');
+            const title = titleInput.value.trim();
+
+            // Validation
+            if (!title) {
+                titleError.classList.add('show');
+                titleInput.focus();
+                return;
+            }
+
+            titleError.classList.remove('show');
+
+            const description = document.getElementById('description').value.trim();
+            const date = document.getElementById('date').value;
+            const tagsString = document.getElementById('tags').value;
+            const tags = parseTags(tagsString);
+
+            if (editingId !== null) {
+                // Update existing entry
+                const entryIndex = entries.findIndex(e => e.id === editingId);
+                if (entryIndex !== -1) {
+                    entries[entryIndex] = {
+                        id: editingId,
+                        title,
+                        description,
+                        date,
+                        tags
+                    };
+                    editingId = null;
+                }
+            } else {
+                // Create new entry
+                const entry = {
+                    id: Date.now().toString(),
+                    title,
+                    description,
+                    date,
+                    tags
+                };
+                entries.unshift(entry);
+            }
+
+            saveEntries();
+            clearForm();
+            renderFeed();
+            updateStats();
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('entryForm').reset();
+            setDateField();
+            document.getElementById('titleError').classList.remove('show');
+            editingId = null;
+        }
+
+        // Edit entry
+        function editEntry(id) {
+            const entry = entries.find(e => e.id === id);
+            if (!entry) return;
+
+            editingId = id;
+            document.getElementById('title').value = entry.title;
+            document.getElementById('description').value = entry.description;
+            document.getElementById('date').value = entry.date;
+            document.getElementById('tags').value = entry.tags.join(', ');
+
+            // Scroll to form
+            document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('title').focus();
+        }
+
+        // Show delete confirmation
+        function showDeleteConfirmation(id) {
+            deleteConfirmationId = id;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        // Confirm delete
+        function confirmDelete() {
+            if (deleteConfirmationId !== null) {
+                entries = entries.filter(e => e.id !== deleteConfirmationId);
+                saveEntries();
+                renderFeed();
+                updateStats();
+                document.getElementById('confirmModal').classList.remove('active');
+                deleteConfirmationId = null;
+            }
+        }
+
+        // Filter by tag
+        function filterByTag(tag) {
+            if (currentFilter === tag) {
+                currentFilter = null;
+            } else {
+                currentFilter = tag;
+            }
+            renderFeed();
+            updateFilterDisplay();
+        }
+
+        // Clear filter
+        function clearFilter() {
+            currentFilter = null;
+            renderFeed();
+            updateFilterDisplay();
+        }
+
+        // Update filter display
+        function updateFilterDisplay() {
+            const filterCard = document.getElementById('filterCard');
+            if (currentFilter) {
+                document.getElementById('filterTagName').textContent = currentFilter;
+                document.querySelector('.filter-tag button').addEventListener('click', clearFilter);
+                filterCard.style.display = 'block';
+            } else {
+                filterCard.style.display = 'none';
+            }
+        }
+
+        // Get filtered entries
+        function getFilteredEntries() {
+            if (!currentFilter) return entries;
+            return entries.filter(entry => entry.tags.includes(currentFilter));
+        }
+
+        // Render feed
+        function renderFeed() {
+            const container = document.getElementById('feedContainer');
+            const filtered = getFilteredEntries();
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>${currentFilter ? `No entries with tag "${currentFilter}".` : 'No entries yet. Add your first log above.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(entry => `
+                <div class="entry">
+                    <div class="entry-header">
+                        <h3 class="entry-title">${escapeHtml(entry.title)}</h3>
+                        <div class="entry-date">${entry.date}</div>
+                    </div>
+                    ${entry.description ? `<div class="entry-description">${escapeHtml(entry.description)}</div>` : ''}
+                    ${entry.tags.length > 0 ? `
+                        <div class="entry-tags">
+                            ${entry.tags.map(tag => `
+                                <button type="button" class="tag-badge" data-tag="${escapeHtml(tag)}" aria-label="Filter by tag: ${escapeHtml(tag)}">
+                                    ${escapeHtml(tag)}
+                                </button>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="entry-actions">
+                        <button type="button" class="btn-edit" data-edit-id="${entry.id}" aria-label="Edit this entry">Edit</button>
+                        <button type="button" class="btn-danger" data-delete-id="${entry.id}" aria-label="Delete this entry">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add event listeners for tag badges
+            document.querySelectorAll('.tag-badge').forEach(badge => {
+                badge.addEventListener('click', () => {
+                    const tag = badge.getAttribute('data-tag');
+                    filterByTag(tag);
+                });
+            });
+
+            // Add event listeners for edit/delete buttons
+            document.querySelectorAll('[data-edit-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    editEntry(btn.getAttribute('data-edit-id'));
+                });
+            });
+
+            document.querySelectorAll('[data-delete-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    showDeleteConfirmation(btn.getAttribute('data-delete-id'));
+                });
+            });
+        }
+
+        // Update stats
+        function updateStats() {
+            // Total entries
+            document.getElementById('totalEntries').textContent = entries.length;
+
+            // Day streak
+            const streak = calculateDayStreak();
+            document.getElementById('dayStreak').textContent = streak;
+
+            // Most used tag
+            const mostUsedTag = findMostUsedTag();
+            document.getElementById('mostUsedTag').textContent = mostUsedTag || '—';
+        }
+
+        // Calculate day streak
+        function calculateDayStreak() {
+            if (entries.length === 0) return 0;
+
+            const uniqueDates = [...new Set(entries.map(e => e.date))].sort().reverse();
+            let streak = 1;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const firstDate = new Date(uniqueDates[0] + 'T00:00:00');
+
+            // Check if first entry is today or yesterday
+            const timeDiff = today - firstDate;
+            const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+            if (daysDiff > 1) return 1; // Streak broken
+
+            for (let i = 1; i < uniqueDates.length; i++) {
+                const currentDate = new Date(uniqueDates[i] + 'T00:00:00');
+                const prevDate = new Date(uniqueDates[i - 1] + 'T00:00:00');
+                const diff = (prevDate - currentDate) / (1000 * 60 * 60 * 24);
+
+                if (diff === 1) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        // Find most used tag
+        function findMostUsedTag() {
+            const tagCounts = {};
+
+            entries.forEach(entry => {
+                entry.tags.forEach(tag => {
+                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+            });
+
+            let maxTag = null;
+            let maxCount = 0;
+
+            for (const [tag, count] of Object.entries(tagCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    maxTag = tag;
+                }
+            }
+
+            return maxTag;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
